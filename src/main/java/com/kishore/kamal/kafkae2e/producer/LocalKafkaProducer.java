@@ -1,5 +1,7 @@
 package com.kishore.kamal.kafkae2e.producer;
 
+import com.kishore.kamal.kafkae2e.partitioner.CustomPartitioner;
+
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
@@ -16,7 +18,8 @@ public class LocalKafkaProducer {
     public static void main(String[] args) {
 //        fireAndForgetProducer();
 //        synchronousSendProducer();
-        asynchronousSendProducer();
+//        asynchronousSendProducer();
+        producerWithCustomPartitioner();
     }
 
     private static void fireAndForgetProducer(){
@@ -73,6 +76,25 @@ public class LocalKafkaProducer {
                 System.out.println("successfully send in kafka "+ recordMetadata.offset() + recordMetadata.partition());
             }
         }
+    }
+
+    private static void producerWithCustomPartitioner(){
+        Properties props = new Properties();
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer");
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer");
+        props.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, CustomPartitioner.class);
+        props.put("special.key", "dev");
+
+
+
+        Producer<String, String> producer = new KafkaProducer<>(props);
+        ProducerRecord<String,String> producerRecord1 = new ProducerRecord<>(TOPIC, "dev", "dev");
+        producer.send(producerRecord1, new CustomCallBack());
+        ProducerRecord<String,String> producerRecord2 = new ProducerRecord<>(TOPIC, "prod", "prod");
+        producer.send(producerRecord2, new CustomCallBack());
+
+        producer.close();
     }
 
 
